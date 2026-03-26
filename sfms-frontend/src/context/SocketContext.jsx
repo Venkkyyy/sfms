@@ -19,7 +19,8 @@ export function SocketProvider({ children }) {
       return;
     }
 
-    const newSocket = io(window.location.origin, {
+    const backendUrl = import.meta.env.VITE_API_URL || '';
+    const newSocket = io(backendUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
     });
