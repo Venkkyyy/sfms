@@ -18,14 +18,14 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
-// Allowed origins for CORS
+// Allowed origins
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'https://sfms-tawny.vercel.app'
 ];
 
-// Initialize Socket.IO **before using it**
+// Socket.io setup
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -43,13 +43,18 @@ initializeSocket(io);
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: false }));
 
+// Single CORS middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_URL
-    : ['http://localhost:5173', 'http://localhost:3000'],
-  credentials: true,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // for server-to-server or tools like Postman
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
 }));
-
 app.options('*', cors());
 
 app.use(express.json({ limit: '10mb' }));
