@@ -9,27 +9,27 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const { initializeSocket } = require('./socket/socket');
 
-// Load env vars
+// Load environment variables
 dotenv.config();
 
-// Connect to MongoDB
+// Connect to MongoDB Atlas
 connectDB();
 
 const app = express();
 const server = http.createServer(app);
 
-// Allowed origins
+// Allowed origins for CORS
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://sfms-tawny.vercel.app'
+  process.env.FRONTEND_URL || 'https://sfms-tawny.vercel.app'
 ];
 
-// Socket.io setup
+// Initialize Socket.IO
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
-    methods: ["GET", "POST"],
+    methods: ['GET', 'POST'],
     credentials: true,
   }
 });
@@ -43,20 +43,20 @@ initializeSocket(io);
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: false }));
 
-// Single CORS middleware
+// CORS middleware
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // for server-to-server or tools like Postman
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
     } else {
-      return callback(new Error('Not allowed by CORS'));
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true
 }));
 app.options('*', cors());
 
+// Body parsers and sanitization
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(mongoSanitize());
@@ -88,8 +88,8 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Start the server
 const PORT = process.env.PORT || 5000;
-
 server.listen(PORT, () => {
   console.log(`\n🚀 SFMS Backend running on port ${PORT}`);
   console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
