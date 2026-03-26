@@ -18,25 +18,21 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io setup
+// Allowed origins for CORS
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'https://sfms-tawny.vercel.app'
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-}));
-
-app.options('*', cors());
+// Initialize Socket.IO **before using it**
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true,
+  }
+});
 
 // Make io accessible in controllers
 app.set('io', io);
@@ -46,12 +42,16 @@ initializeSocket(io);
 
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: false }));
+
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
     ? process.env.FRONTEND_URL
     : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true,
 }));
+
+app.options('*', cors());
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(mongoSanitize());
