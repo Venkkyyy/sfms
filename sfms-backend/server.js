@@ -22,7 +22,7 @@ const server = http.createServer(app);
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  process.env.FRONTEND_URL || 'https://sfms-tawny.vercel.app'
+  'https://sfms-git-main-annsurskhas-projects.vercel.app'
 ];
 
 // Initialize Socket.IO
