@@ -19,15 +19,24 @@ const app = express();
 const server = http.createServer(app);
 
 // Socket.io setup
-const io = new Server(server, {
-  cors: {
-    origin: process.env.NODE_ENV === 'production'
-      ? process.env.FRONTEND_URL
-      : ['http://localhost:5173', 'http://localhost:3000'],
-    methods: ['GET', 'POST'],
-    credentials: true,
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://sfms-tawny.vercel.app'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
-});
+  credentials: true,
+}));
+
+app.options('*', cors());
 
 // Make io accessible in controllers
 app.set('io', io);
